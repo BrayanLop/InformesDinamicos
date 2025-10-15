@@ -1,0 +1,72 @@
+@model List<InformesDinamicos.Data.Models.ClienteData>
+@{
+    ViewData["Title"] = "Microservicio de Informes";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Microservicio de Informes</h1>
+    <p>Datos distribuidos por shards</p>
+</div>
+
+<div class="row mb-3">
+    <div class="col-8">
+        <form method="get">
+            <div class="input-group">
+                <input type="text" name="clienteId" class="form-control" placeholder="ID del Cliente" />
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-4">
+        <a href="/Test/ProcesarEventos" class="btn btn-success w-100">Procesar Eventos de RabbitMQ</a>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-3">
+        <a href="/Home/Shard?shardName=Academico_0_10" class="btn btn-info">Académico 0-10</a>
+    </div>
+    <div class="col-3">
+        <a href="/Home/Shard?shardName=Academico_11_20" class="btn btn-info">Académico 11-20</a>
+    </div>
+    <div class="col-3">
+        <a href="/Home/Shard?shardName=Comunidad_0_10" class="btn btn-info">Comunidad 0-10</a>
+    </div>
+    <div class="col-3">
+        <a href="/Home/Shard?shardName=Comunidad_11_20" class="btn btn-info">Comunidad 11-20</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3>Datos de Clientes</h3>
+        @if (Model.Any())
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Cliente ID</th>
+                        <th>Última Actualización</th>
+                        <th>Cursos</th>
+                        <th>Promedio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cliente in Model)
+                    {
+                        <tr>
+                            <td>@cliente.ClienteId</td>
+                            <td>@cliente.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>@string.Join(", ", cliente.Datos?.Cursos ?? new List<string>())</td>
+                            <td>@cliente.Datos?.Promedio</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No hay datos disponibles.</p>
+        }
+    </div>
+</div>
