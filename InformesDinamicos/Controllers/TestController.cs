@@ -29,16 +29,24 @@ namespace InformesDinamicos.Controllers
                         Id = "5", 
                         Inst = "INST_001",
                         DatosAcademicos = new BsonDocument {
-                            { "programa", "Ingeniería de Sistemas" },
-                            { "semestre", 8 },
-                            { "promedio", 4.2 },
-                            { "creditos", 145 },
-                            { "estado", "Activo" }
+                            { "programas", new BsonArray {
+                                new BsonDocument {
+                                    { "nombre", "Ingeniería de Sistemas" },
+                                    { "nivel", 8 },
+                                    { "promedio", 4.2 },
+                                    { "creditos", 145 },
+                                    { "asignaturas", new BsonArray { "Algoritmos", "Estructuras" } }
+                                }
+                            }}
                         },
                         DatosComunidad = new BsonDocument {
-                            { "cargo", "Estudiante" },
-                            { "eventos_participados", 5 },
-                            { "proyectos_activos", 2 }
+                            { "personas", new BsonArray {
+                                new BsonDocument {
+                                    { "nombre", "Juan Pérez" },
+                                    { "rol", "Estudiante" },
+                                    { "edad", 22 }
+                                }
+                            }}
                         }
                     },
                     // Shard 11_20
@@ -46,16 +54,24 @@ namespace InformesDinamicos.Controllers
                         Id = "15", 
                         Inst = "INST_002",
                         DatosAcademicos = new BsonDocument {
-                            { "programa", "Medicina" },
-                            { "semestre", 6 },
-                            { "promedio", 4.5 },
-                            { "creditos", 120 },
-                            { "estado", "Activo" }
+                            { "programas", new BsonArray {
+                                new BsonDocument {
+                                    { "nombre", "Medicina" },
+                                    { "nivel", 6 },
+                                    { "promedio", 4.5 },
+                                    { "creditos", 120 },
+                                    { "asignaturas", new BsonArray { "Anatomía", "Fisiología" } }
+                                }
+                            }}
                         },
                         DatosComunidad = new BsonDocument {
-                            { "cargo", "Estudiante" },
-                            { "eventos_participados", 8 },
-                            { "proyectos_activos", 1 }
+                            { "personas", new BsonArray {
+                                new BsonDocument {
+                                    { "nombre", "María García" },
+                                    { "rol", "Monitor" },
+                                    { "edad", 24 }
+                                }
+                            }}
                         }
                     }
                 };
@@ -65,10 +81,8 @@ namespace InformesDinamicos.Controllers
                     var shard = _shardingService.DeterminarShard(cliente.Id);
                     var filter = Builders<ClienteData>.Filter.Eq(x => x.ClienteId, cliente.Id);
                     
-                    // BD Academico - SOLO datos académicos
-                    var datosAcademicos = new BsonDocument {
-                        { "datos_academicos", cliente.DatosAcademicos }
-                    };
+                    // BD Academico - datos consolidados
+                    var datosAcademicos = cliente.DatosAcademicos;
                     
                     var dbAcademico = _shardingService.GetSeccionDatabase("Academico");
                     var collectionAcademico = dbAcademico.GetCollection<ClienteData>($"Academico_{shard}");
@@ -82,18 +96,8 @@ namespace InformesDinamicos.Controllers
                     };
                     await collectionAcademico.ReplaceOneAsync(filter, clienteAcademico, new ReplaceOptions { IsUpsert = true });
                     
-                    // BD Comunidad - SOLO datos de comunidad
-                    var datosComunidad = new BsonDocument {
-                        { "datos_comunidad", new BsonDocument {
-                            { "cargo", cliente.DatosComunidad["cargo"] },
-                            { "eventos_participados", cliente.DatosComunidad["eventos_participados"] },
-                            { "proyectos_activos", cliente.DatosComunidad["proyectos_activos"] },
-                            { "personas", new BsonArray {
-                                new BsonDocument { { "id", "1" }, { "nombre", "Juan" }, { "apellido", "Pérez" } },
-                                new BsonDocument { { "id", "2" }, { "nombre", "María" }, { "apellido", "García" } }
-                            }}
-                        }}
-                    };
+                    // BD Comunidad - datos consolidados
+                    var datosComunidad = cliente.DatosComunidad;
                     
                     var dbComunidad = _shardingService.GetSeccionDatabase("Comunidad");
                     var collectionComunidad = dbComunidad.GetCollection<ClienteData>($"Comunidad_{shard}");

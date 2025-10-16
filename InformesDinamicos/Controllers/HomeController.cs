@@ -111,39 +111,42 @@ namespace InformesDinamicos.Controllers
                 {
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Academico", 
                           Datos = (object)new { 
-                              programa = "Ingeniería", semestre = 8, promedio = 4.2, creditos = 180,
-                              materias = new[] { "Cálculo", "Física", "Programación" },
-                              notas = new { parcial1 = 4.1, parcial2 = 4.3, final = 4.2 }
+                              programas = new[] {
+                                  new { nombre = "Ingeniería", nivel = 8, promedio = 4.2, creditos = 180, asignaturas = new[] { "Cálculo", "Física" } },
+                                  new { nombre = "Sistemas", nivel = 2, promedio = 3.8, creditos = 45, asignaturas = new[] { "Algoritmos", "Bases de Datos" } }
+                              }
                           } },
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Comunidad", 
                           Datos = (object)new { 
-                              cargo = "Estudiante", eventos = 5, proyectos = 2, voluntariado = "Cruz Roja",
-                              actividades = new[] { "Deportes", "Teatro", "Debate" },
-                              logros = new { reconocimientos = 2, certificados = 3 }
+                              personas = new[] {
+                                  new { nombre = "Juan Pérez", rol = "Estudiante", edad = 22 },
+                                  new { nombre = "María García", rol = "Monitor", edad = 24 }
+                              }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_002", Seccion = "Academico", 
                           Datos = (object)new { 
-                              programa = "Medicina", semestre = 6, promedio = 4.5, creditos = 220,
-                              materias = new[] { "Anatomía", "Fisiología", "Patología" },
-                              notas = new { parcial1 = 4.4, parcial2 = 4.6, final = 4.5 }
+                              programas = new[] {
+                                  new { nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 220, asignaturas = new[] { "Anatomía", "Fisiología" } }
+                              }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_002", Seccion = "Comunidad", 
                           Datos = (object)new { 
-                              cargo = "Monitor", eventos = 8, proyectos = 1, club = "Deportivo",
-                              actividades = new[] { "Fútbol", "Natación", "Atletismo" },
-                              logros = new { reconocimientos = 1, certificados = 2 }
+                              personas = new[] {
+                                  new { nombre = "Carlos López", rol = "Representante", edad = 25 },
+                                  new { nombre = "Ana Martínez", rol = "Coordinadora", edad = 28 }
+                              }
                           } },
                     new { ClienteId = "3", InstitucionId = "INST_003", Seccion = "Academico", 
                           Datos = (object)new { 
-                              programa = "Derecho", semestre = 4, promedio = 3.8, creditos = 120,
-                              materias = new[] { "Constitucional", "Civil", "Penal" },
-                              notas = new { parcial1 = 3.7, parcial2 = 3.9, final = 3.8 }
+                              programas = new[] {
+                                  new { nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 120, asignaturas = new[] { "Constitucional", "Civil" } }
+                              }
                           } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Academico", 
                           Datos = (object)new { 
-                              programa = "Psicología", semestre = 7, promedio = 4.1, creditos = 200,
-                              materias = new[] { "Cognitiva", "Social", "Clínica" },
-                              notas = new { parcial1 = 4.0, parcial2 = 4.2, final = 4.1 }
+                              programas = new[] {
+                                  new { nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 200, asignaturas = new[] { "Cognitiva", "Social" } }
+                              }
                           } }
                 };
 

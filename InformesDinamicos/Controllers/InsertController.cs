@@ -95,27 +95,56 @@ namespace InformesDinamicos.Controllers
             {
                 var registros = new[]
                 {
-                    // Shard 1_10 (IDs 1-10)
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Academico", 
-                          Datos = (object)new { programa = "Ingeniería de Sistemas", semestre = 8, promedio = 4.2, creditos = 145, estado = "Activo" } },
+                          Datos = (object)new { 
+                              programas = new[] {
+                                  new { nombre = "Ingeniería de Sistemas", nivel = 8, promedio = 4.2, creditos = 145, asignaturas = new[] { "Algoritmos", "Estructuras" } },
+                                  new { nombre = "Matemáticas", nivel = 3, promedio = 3.9, creditos = 60, asignaturas = new[] { "Cálculo", "Álgebra" } }
+                              }
+                          } },
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Comunidad", 
-                          Datos = (object)new { cargo = "Estudiante", eventos_participados = 5, proyectos_activos = 2 } },
-                    
+                          Datos = (object)new { 
+                              personas = new[] {
+                                  new { nombre = "Pedro Rodríguez", rol = "Estudiante", edad = 21 },
+                                  new { nombre = "Laura Jiménez", rol = "Voluntaria", edad = 23 }
+                              }
+                          } },
                     new { ClienteId = "8", InstitucionId = "INST_002", Seccion = "Academico", 
-                          Datos = (object)new { programa = "Medicina", semestre = 6, promedio = 4.5, creditos = 120, estado = "Activo" } },
+                          Datos = (object)new { 
+                              programas = new[] {
+                                  new { nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 120, asignaturas = new[] { "Anatomía", "Fisiología" } }
+                              }
+                          } },
                     new { ClienteId = "8", InstitucionId = "INST_002", Seccion = "Comunidad", 
-                          Datos = (object)new { cargo = "Estudiante", eventos_participados = 8, proyectos_activos = 1 } },
-                    
-                    // Shard 11_20 (IDs 11-20)
+                          Datos = (object)new { 
+                              personas = new[] {
+                                  new { nombre = "Diego Morales", rol = "Estudiante", edad = 20 }
+                              }
+                          } },
                     new { ClienteId = "15", InstitucionId = "INST_003", Seccion = "Academico", 
-                          Datos = (object)new { programa = "Derecho", semestre = 4, promedio = 3.8, creditos = 80, estado = "Activo" } },
+                          Datos = (object)new { 
+                              programas = new[] {
+                                  new { nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 80, asignaturas = new[] { "Constitucional", "Civil" } }
+                              }
+                          } },
                     new { ClienteId = "15", InstitucionId = "INST_003", Seccion = "Comunidad", 
-                          Datos = (object)new { cargo = "Representante", eventos_participados = 12, proyectos_activos = 3 } },
-                    
+                          Datos = (object)new { 
+                              personas = new[] {
+                                  new { nombre = "Sofía Vargas", rol = "Representante", edad = 26 }
+                              }
+                          } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Academico", 
-                          Datos = (object)new { programa = "Psicología", semestre = 7, promedio = 4.1, creditos = 130, estado = "Activo" } },
+                          Datos = (object)new { 
+                              programas = new[] {
+                                  new { nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 130, asignaturas = new[] { "Cognitiva", "Social" } }
+                              }
+                          } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Comunidad", 
-                          Datos = (object)new { cargo = "Monitor", eventos_participados = 6, proyectos_activos = 1 } }
+                          Datos = (object)new { 
+                              personas = new[] {
+                                  new { nombre = "Andrés Castro", rol = "Monitor", edad = 27 }
+                              }
+                          } }
                 };
 
                 var resultados = new List<object>();
