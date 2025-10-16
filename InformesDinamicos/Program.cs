@@ -17,6 +17,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 builder.Services.AddSingleton<ShardingService>();
 builder.Services.AddScoped<RabbitConsumerService>();
 builder.Services.AddScoped<ConsolidacionService>();
+builder.Services.AddScoped<DatabaseService>();
 
 // RabbitMQ Service
 builder.Services.AddHostedService<RabbitListener>();
@@ -37,7 +38,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Nuevo}/{id?}");
 
 app.MapStaticAssets();
 

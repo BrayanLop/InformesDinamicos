@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InformesDinamicos.Controllers
 {
-    public class DataController : Controller
+    public class AcademicoController : Controller
     {
         public IActionResult Index()
         {

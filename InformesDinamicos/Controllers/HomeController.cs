@@ -103,6 +103,11 @@ namespace InformesDinamicos.Controllers
             return View();
         }
 
+        public IActionResult Nuevo()
+        {
+            return View();
+        }
+
         public async Task<IActionResult> CrearDatos()
         {
             try
@@ -112,40 +117,77 @@ namespace InformesDinamicos.Controllers
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Ingeniería", nivel = 8, promedio = 4.2, creditos = 180, asignaturas = new[] { "Cálculo", "Física" } },
-                                  new { nombre = "Sistemas", nivel = 2, promedio = 3.8, creditos = 45, asignaturas = new[] { "Algoritmos", "Bases de Datos" } }
+                                  new { id = "prog_001", nombre = "Ingeniería", nivel = 8, promedio = 4.2, creditos = 180, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_001", nombre = "Cálculo" },
+                                            new { id = "asig_002", nombre = "Física" }
+                                        } },
+                                  new { id = "prog_002", nombre = "Sistemas", nivel = 2, promedio = 3.8, creditos = 45, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_003", nombre = "Algoritmos" },
+                                            new { id = "asig_004", nombre = "Bases de Datos" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_001", nombre = "Matemáticas Avanzadas", creditos = 4, semestre = 3 },
+                                  new { id = "asig_crud_002", nombre = "Química General", creditos = 3, semestre = 2 },
+                                  new { id = "asig_crud_003", nombre = "Inglés Técnico", creditos = 2, semestre = 1 }
                               }
                           } },
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Juan Pérez", rol = "Estudiante", edad = 22 },
-                                  new { nombre = "María García", rol = "Monitor", edad = 24 }
+                                  new { id = "pers_001", nombre = "Juan Pérez", rol = "Estudiante", edad = 22 },
+                                  new { id = "pers_002", nombre = "María García", rol = "Monitor", edad = 24 }
                               }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_002", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 220, asignaturas = new[] { "Anatomía", "Fisiología" } }
+                                  new { id = "prog_003", nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 220, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_005", nombre = "Anatomía" },
+                                            new { id = "asig_006", nombre = "Fisiología" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_004", nombre = "Bioquímica", creditos = 5, semestre = 4 },
+                                  new { id = "asig_crud_005", nombre = "Farmacología", creditos = 4, semestre = 6 }
                               }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_002", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Carlos López", rol = "Representante", edad = 25 },
-                                  new { nombre = "Ana Martínez", rol = "Coordinadora", edad = 28 }
+                                  new { id = "pers_003", nombre = "Carlos López", rol = "Representante", edad = 25 },
+                                  new { id = "pers_004", nombre = "Ana Martínez", rol = "Coordinadora", edad = 28 }
                               }
                           } },
                     new { ClienteId = "3", InstitucionId = "INST_003", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 120, asignaturas = new[] { "Constitucional", "Civil" } }
+                                  new { id = "prog_004", nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 120, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_007", nombre = "Constitucional" },
+                                            new { id = "asig_008", nombre = "Civil" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_006", nombre = "Historia del Derecho", creditos = 3, semestre = 2 },
+                                  new { id = "asig_crud_007", nombre = "Ética Profesional", creditos = 2, semestre = 8 }
                               }
                           } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 200, asignaturas = new[] { "Cognitiva", "Social" } }
+                                  new { id = "prog_005", nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 200, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_009", nombre = "Cognitiva" },
+                                            new { id = "asig_010", nombre = "Social" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_008", nombre = "Estadística Aplicada", creditos = 4, semestre = 5 },
+                                  new { id = "asig_crud_009", nombre = "Neuropsicología", creditos = 3, semestre = 7 }
                               }
                           } }
                 };
@@ -183,8 +225,7 @@ namespace InformesDinamicos.Controllers
         {
             if (string.IsNullOrEmpty(clienteId))
             {
-                ViewBag.Error = "Cliente ID requerido";
-                return View(new List<ClienteData>());
+                return RedirectToAction("Nuevo");
             }
 
             try
@@ -199,6 +240,31 @@ namespace InformesDinamicos.Controllers
                 ViewBag.Error = ex.Message;
                 return View(new List<ClienteData>());
             }
+        }
+        
+        public IActionResult General()
+        {
+            return RedirectToAction("Nuevo");
+        }
+        
+        public IActionResult Academico()
+        {
+            return RedirectToAction("Nuevo");
+        }
+        
+        public IActionResult Comunidad()
+        {
+            return RedirectToAction("Nuevo");
+        }
+        
+        public IActionResult Todas()
+        {
+            return RedirectToAction("Nuevo");
+        }
+        
+        public IActionResult Informes()
+        {
+            return View();
         }
     }
 }

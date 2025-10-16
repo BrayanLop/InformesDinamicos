@@ -1,0 +1,250 @@
+@{
+    ViewData["Title"] = "Informes Dinámicos";
+}
+
+<div class="container-fluid">
+    <div class="text-center mb-4">
+        <h1 class="display-4">📊 Informes Dinámicos</h1>
+        <p class="lead">Consolidación de datos de todas las bases</p>
+    </div>
+
+    <!-- Controles de Filtro -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Institución</label>
+            <select id="filtro-institucion" class="form-select">
+                <option value="">Todas las instituciones</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Tipo de Reporte</label>
+            <select id="tipo-reporte" class="form-select">
+                <option value="resumen">Resumen General</option>
+                <option value="programas">Programas por Institución</option>
+                <option value="personas">Personas por Rol</option>
+                <option value="asignaturas">Asignaturas por Programa</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Acciones</label>
+            <div>
+                <button class="btn btn-primary" onclick="generarInforme()">
+                    <i class="fas fa-chart-line"></i> Generar
+                </button>
+                <button class="btn btn-success" onclick="exportarDatos()">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de Resultados -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-table"></i> Resultados del Informe</h5>
+        </div>
+        <div class="card-body">
+            <div id="informe-content">
+                <div class="text-center text-muted">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <p>Selecciona los filtros y haz clic en "Generar" para ver el informe</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    cargarInstituciones();
+});
+
+async function cargarInstituciones() {
+    try {
+        const res = await fetch('/api/instituciones');
+        const instituciones = await res.json();
+        
+        const select = document.getElementById('filtro-institucion');
+        instituciones.forEach(inst => {
+            select.innerHTML += `<option value="${inst.institucionId}">${inst.nombre}</option>`;
+        });
+    } catch (e) {
+        console.error('Error cargando instituciones:', e);
+    }
+}
+
+async function generarInforme() {
+    const institucion = document.getElementById('filtro-institucion').value;
+    const tipo = document.getElementById('tipo-reporte').value;
+    
+    try {
+        let url = `/api/informes/${tipo}`;
+        if (institucion) url += `?institucionId=${institucion}`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        mostrarInforme(tipo, data);
+    } catch (e) {
+        document.getElementById('informe-content').innerHTML = 
+            `<div class="alert alert-danger">Error: ${e.message}</div>`;
+    }
+}
+
+function mostrarInforme(tipo, data) {
+    const content = document.getElementById('informe-content');
+    
+    switch(tipo) {
+        case 'resumen':
+            content.innerHTML = generarResumen(data);
+            break;
+        case 'programas':
+            content.innerHTML = generarTablaProgramas(data);
+            break;
+        case 'personas':
+            content.innerHTML = generarTablaPersonas(data);
+            break;
+        case 'asignaturas':
+            content.innerHTML = generarTablaAsignaturas(data);
+            break;
+    }
+}
+
+function generarResumen(data) {
+    return `
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3>${data.instituciones || 0}</h3>
+                        <p>Instituciones</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>${data.programas || 0}</h3>
+                        <p>Programas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>${data.asignaturas || 0}</h3>
+                        <p>Asignaturas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>${data.personas || 0}</h3>
+                        <p>Personas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generarTablaProgramas(data) {
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Institución</th>
+                        <th>Programa</th>
+                        <th>Nivel</th>
+                        <th>Promedio</th>
+                        <th>Créditos</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(item => {
+        html += `
+            <tr>
+                <td><span class="badge bg-secondary">${item.institucionId}</span></td>
+                <td>${item.nombre}</td>
+                <td>${item.nivel}</td>
+                <td>${item.promedio}</td>
+                <td>${item.creditos}</td>
+            </tr>
+        `;
+    });
+    
+    return html + '</tbody></table></div>';
+}
+
+function generarTablaPersonas(data) {
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Institución</th>
+                        <th>Nombre</th>
+                        <th>Rol</th>
+                        <th>Edad</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(item => {
+        html += `
+            <tr>
+                <td><span class="badge bg-secondary">${item.institucionId}</span></td>
+                <td>${item.nombre}</td>
+                <td><span class="badge bg-success">${item.rol}</span></td>
+                <td>${item.edad}</td>
+            </tr>
+        `;
+    });
+    
+    return html + '</tbody></table></div>';
+}
+
+function generarTablaAsignaturas(data) {
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Programa</th>
+                        <th>Asignatura</th>
+                        <th>Créditos</th>
+                        <th>Semestre</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(item => {
+        html += `
+            <tr>
+                <td><span class="badge bg-primary">${item.programaId}</span></td>
+                <td>${item.nombre}</td>
+                <td>${item.creditos}</td>
+                <td>${item.semestre}</td>
+            </tr>
+        `;
+    });
+    
+    return html + '</tbody></table></div>';
+}
+
+function exportarDatos() {
+    const tipo = document.getElementById('tipo-reporte').value;
+    const institucion = document.getElementById('filtro-institucion').value;
+    
+    let url = `/api/informes/${tipo}/export`;
+    if (institucion) url += `?institucionId=${institucion}`;
+    
+    window.open(url, '_blank');
+}
+</script>

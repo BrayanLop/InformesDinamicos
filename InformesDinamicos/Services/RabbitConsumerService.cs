@@ -84,9 +84,62 @@ namespace InformesDinamicos.Services
             if (evento.Cambio.TryGetProperty("Datos", out var nuevosDatos))
             {
                 var nuevosDatosBson = BsonDocument.Parse(nuevosDatos.GetRawText());
-                foreach (var elemento in nuevosDatosBson)
+                
+                // Actualización granular para programas
+                if (nuevosDatosBson.Contains("programa_update") && evento.Seccion == "Academico")
                 {
-                    datosCompletos[elemento.Name] = elemento.Value;
+                    var programaUpdate = nuevosDatosBson["programa_update"].AsBsonDocument;
+                    var programaId = programaUpdate["id"].AsString;
+                    
+                    if (datosCompletos.Contains("programas"))
+                    {
+                        var programas = datosCompletos["programas"].AsBsonArray;
+                        for (int i = 0; i < programas.Count; i++)
+                        {
+                            if (programas[i]["id"].AsString == programaId)
+                            {
+                                // Actualizar programa específico
+                                foreach (var campo in programaUpdate)
+                                {
+                                    if (campo.Name != "id")
+                                        programas[i][campo.Name] = campo.Value;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Actualización granular para personas
+                else if (nuevosDatosBson.Contains("persona_update") && evento.Seccion == "Comunidad")
+                {
+                    var personaUpdate = nuevosDatosBson["persona_update"].AsBsonDocument;
+                    var personaId = personaUpdate["id"].AsString;
+                    
+                    if (datosCompletos.Contains("personas"))
+                    {
+                        var personas = datosCompletos["personas"].AsBsonArray;
+                        for (int i = 0; i < personas.Count; i++)
+                        {
+                            if (personas[i]["id"].AsString == personaId)
+                            {
+                                // Actualizar persona específica
+                                foreach (var campo in personaUpdate)
+                                {
+                                    if (campo.Name != "id")
+                                        personas[i][campo.Name] = campo.Value;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Actualización completa (comportamiento anterior)
+                    foreach (var elemento in nuevosDatosBson)
+                    {
+                        datosCompletos[elemento.Name] = elemento.Value;
+                    }
                 }
             }
             

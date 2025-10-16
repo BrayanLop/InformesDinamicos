@@ -98,51 +98,87 @@ namespace InformesDinamicos.Controllers
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Ingeniería de Sistemas", nivel = 8, promedio = 4.2, creditos = 145, asignaturas = new[] { "Algoritmos", "Estructuras" } },
-                                  new { nombre = "Matemáticas", nivel = 3, promedio = 3.9, creditos = 60, asignaturas = new[] { "Cálculo", "Álgebra" } }
+                                  new { id = "prog_101", nombre = "Ingeniería de Sistemas", nivel = 8, promedio = 4.2, creditos = 145, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_101", nombre = "Algoritmos" },
+                                            new { id = "asig_102", nombre = "Estructuras" }
+                                        } },
+                                  new { id = "prog_102", nombre = "Matemáticas", nivel = 3, promedio = 3.9, creditos = 60, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_103", nombre = "Cálculo" },
+                                            new { id = "asig_104", nombre = "Álgebra" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_101", nombre = "Física Aplicada", creditos = 4, semestre = 2 },
+                                  new { id = "asig_crud_102", nombre = "Metodología de Investigación", creditos = 3, semestre = 4 }
                               }
                           } },
                     new { ClienteId = "5", InstitucionId = "INST_001", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Pedro Rodríguez", rol = "Estudiante", edad = 21 },
-                                  new { nombre = "Laura Jiménez", rol = "Voluntaria", edad = 23 }
+                                  new { id = "pers_101", nombre = "Pedro Rodríguez", rol = "Estudiante", edad = 21 },
+                                  new { id = "pers_102", nombre = "Laura Jiménez", rol = "Voluntaria", edad = 23 }
                               }
                           } },
                     new { ClienteId = "8", InstitucionId = "INST_002", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 120, asignaturas = new[] { "Anatomía", "Fisiología" } }
+                                  new { id = "prog_103", nombre = "Medicina", nivel = 6, promedio = 4.5, creditos = 120, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_105", nombre = "Anatomía" },
+                                            new { id = "asig_106", nombre = "Fisiología" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_103", nombre = "Patología", creditos = 5, semestre = 5 },
+                                  new { id = "asig_crud_104", nombre = "Microbiología", creditos = 4, semestre = 3 }
                               }
                           } },
                     new { ClienteId = "8", InstitucionId = "INST_002", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Diego Morales", rol = "Estudiante", edad = 20 }
+                                  new { id = "pers_103", nombre = "Diego Morales", rol = "Estudiante", edad = 20 }
                               }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_003", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 80, asignaturas = new[] { "Constitucional", "Civil" } }
+                                  new { id = "prog_104", nombre = "Derecho", nivel = 4, promedio = 3.8, creditos = 80, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_107", nombre = "Constitucional" },
+                                            new { id = "asig_108", nombre = "Civil" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_105", nombre = "Derecho Penal", creditos = 4, semestre = 6 },
+                                  new { id = "asig_crud_106", nombre = "Derecho Laboral", creditos = 3, semestre = 7 }
                               }
                           } },
                     new { ClienteId = "15", InstitucionId = "INST_003", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Sofía Vargas", rol = "Representante", edad = 26 }
+                                  new { id = "pers_104", nombre = "Sofía Vargas", rol = "Representante", edad = 26 }
                               }
                           } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Academico", 
                           Datos = (object)new { 
                               programas = new[] {
-                                  new { nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 130, asignaturas = new[] { "Cognitiva", "Social" } }
+                                  new { id = "prog_105", nombre = "Psicología", nivel = 7, promedio = 4.1, creditos = 130, 
+                                        asignaturas = new[] { 
+                                            new { id = "asig_109", nombre = "Cognitiva" },
+                                            new { id = "asig_110", nombre = "Social" }
+                                        } }
+                              },
+                              asignaturas = new[] {
+                                  new { id = "asig_crud_107", nombre = "Psicometría", creditos = 3, semestre = 6 },
+                                  new { id = "asig_crud_108", nombre = "Terapia Cognitiva", creditos = 4, semestre = 8 }
                               }
                           } },
                     new { ClienteId = "18", InstitucionId = "INST_004", Seccion = "Comunidad", 
                           Datos = (object)new { 
                               personas = new[] {
-                                  new { nombre = "Andrés Castro", rol = "Monitor", edad = 27 }
+                                  new { id = "pers_105", nombre = "Andrés Castro", rol = "Monitor", edad = 27 }
                               }
                           } }
                 };
