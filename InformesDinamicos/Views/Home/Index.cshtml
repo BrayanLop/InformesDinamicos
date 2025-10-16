@@ -1,72 +1,192 @@
 @model List<InformesDinamicos.Data.Models.ClienteData>
+@using MongoDB.Bson.IO
 @{
     ViewData["Title"] = "Microservicio de Informes";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Microservicio de Informes</h1>
-    <p>Datos distribuidos por shards</p>
-</div>
-
-<div class="row mb-3">
-    <div class="col-8">
-        <form method="get">
-            <div class="input-group">
-                <input type="text" name="clienteId" class="form-control" placeholder="ID del Cliente" />
-                <button class="btn btn-primary" type="submit">Buscar</button>
+<div class="container-fluid">
+    <div class="text-center mb-4">
+        <h1 class="display-4">📊 Microservicio de Informes</h1>
+        <p class="lead">Sistema de datos distribuidos con MongoDB Sharding</p>
+        @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Error:</strong> @ViewBag.Error
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        </form>
-    </div>
-    <div class="col-4">
-        <a href="/Test/ProcesarEventos" class="btn btn-success w-100">Procesar Eventos de RabbitMQ</a>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-3">
-        <a href="/Home/Shard?shardName=Academico_0_10" class="btn btn-info">Académico 0-10</a>
-    </div>
-    <div class="col-3">
-        <a href="/Home/Shard?shardName=Academico_11_20" class="btn btn-info">Académico 11-20</a>
-    </div>
-    <div class="col-3">
-        <a href="/Home/Shard?shardName=Comunidad_0_10" class="btn btn-info">Comunidad 0-10</a>
-    </div>
-    <div class="col-3">
-        <a href="/Home/Shard?shardName=Comunidad_11_20" class="btn btn-info">Comunidad 11-20</a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <h3>Datos de Clientes</h3>
-        @if (Model.Any())
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.ShardName as string))
         {
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Cliente ID</th>
-                        <th>Última Actualización</th>
-                        <th>Cursos</th>
-                        <th>Promedio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var cliente in Model)
+            <div class="alert alert-info">
+                <strong>Mostrando datos del shard:</strong> @ViewBag.ShardName
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.ShardInfo as string))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-database"></i> <strong>@ViewBag.ShardInfo</strong>
+                @if (!string.IsNullOrEmpty(ViewBag.ShardCompleto as string))
+                {
+                    <a href="/Home/Shard?shardName=@ViewBag.ShardCompleto" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="fas fa-eye"></i> Ver todo el shard
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Buscadores -->
+    <div class="row mb-4">
+        <!-- Buscar por Cliente ID -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔍 Buscar por Cliente ID</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="/Home/Index">
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <input type="text" name="clienteId" class="form-control" placeholder="GUID o ID numérico" value="@ViewBag.ClienteId" />
+                            </div>
+                            <div class="col-4">
+                                <select name="seccion" class="form-select">
+                                    <option value="Academico" selected="@(ViewBag.Seccion == "Academico")">Académico</option>
+                                    <option value="Comunidad" selected="@(ViewBag.Seccion == "Comunidad")">Comunidad</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button class="btn btn-primary w-100" type="submit">Buscar Cliente</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buscar por Shard -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🗂️ Buscar por Shard</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="/Home/Shard">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <select name="seccion" class="form-select" id="seccionSelect">
+                                    <option value="Academico">Académico</option>
+                                    <option value="Comunidad">Comunidad</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <select name="rango" class="form-select" id="rangoSelect">
+                                    <option value="1_10">1-10</option>
+                                    <option value="11_20">11-20</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button class="btn btn-info w-100" type="button" onclick="buscarPorShard()">Ver Shard Completo</button>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button class="btn btn-success w-100" type="button" onclick="crearDatos()">Crear Datos de Prueba</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>📋 Datos de Clientes</h5>
+                    <span class="badge bg-secondary">@Model.Count registros</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
                     {
-                        <tr>
-                            <td>@cliente.ClienteId</td>
-                            <td>@cliente.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                            <td>@string.Join(", ", cliente.Datos?.Cursos ?? new List<string>())</td>
-                            <td>@cliente.Datos?.Promedio</td>
-                        </tr>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Cliente ID</th>
+                                        <th>Institución ID</th>
+                                        <th>Datos</th>
+                                        <th>Versión</th>
+                                        <th>Última Actualización</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cliente in Model)
+                                    {
+                                        <tr>
+                                            <td><code>@cliente.ClienteId</code></td>
+                                            <td><span class="badge bg-info">@cliente.InstitucionId</span></td>
+                                            <td>
+                                                <details>
+                                                    <summary class="btn btn-sm btn-outline-secondary">Ver datos</summary>
+                                                    <pre class="mt-2 p-2 bg-light border rounded" style="white-space: pre-wrap; word-break: break-word; max-width: 400px; font-family: 'Courier New', monospace;"><code>@GetBsonAsJson(cliente.Datos)</code></pre>
+                                                </details>
+                                            </td>
+                                            <td><span class="badge bg-primary">v@cliente.Version</span></td>
+                                            <td><small>@cliente.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</small></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <p>No hay datos disponibles.</p>
-        }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay datos disponibles</h5>
+                            <p class="text-muted">Intenta buscar un cliente específico o procesar eventos de RabbitMQ</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+@functions {
+    public string GetBsonAsJson(MongoDB.Bson.BsonDocument bsonDoc)
+    {
+        try
+        {
+            if (bsonDoc == null)
+                return "N/A";
+            
+            return bsonDoc.ToString();
+        }
+        catch
+        {
+            return "Error al convertir datos";
+        }
+    }
+}
+
+<script>
+function buscarPorShard() {
+    const seccion = document.getElementById('seccionSelect').value;
+    const rango = document.getElementById('rangoSelect').value;
+    const shardName = `${seccion}_${rango}`;
+    window.location.href = `/Home/Shard?shardName=${shardName}`;
+}
+
+function crearDatos() {
+    fetch('/Home/CrearDatos')
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? '✅ ' + data.mensaje : '❌ Error: ' + data.error);
+        })
+        .catch(error => {
+            alert('❌ Error: ' + error.message);
+        });
+}
+</script>

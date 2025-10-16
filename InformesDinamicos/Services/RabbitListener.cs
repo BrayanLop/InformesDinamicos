@@ -5,6 +5,7 @@ using System.Text.Json;
 using InformesDinamicos.Data;
 using InformesDinamicos.Data.Models;
 using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace InformesDinamicos.Services
 {
@@ -64,14 +65,43 @@ namespace InformesDinamicos.Services
 
         private async Task ProcesarEvento(EventoJack evento)
         {
-            var collection = _shardingService.GetClienteCollection(evento.ClienteId, evento.Seccion);
+            var institucionId = $"INST_{evento.RegistroId}";
+            var shard = _shardingService.DeterminarShard(evento.ClienteId);
+            var seccionKey = evento.Seccion.ToLower() == "academico" ? "datos_academicos" : "datos_comunidad";
+            
+            var db = _shardingService.GetSeccionDatabase(evento.Seccion);
+            var collection = db.GetCollection<ClienteData>($"{evento.Seccion}_{shard}");
             
             var filter = Builders<ClienteData>.Filter.Eq(x => x.ClienteId, evento.ClienteId);
-            var update = Builders<ClienteData>.Update
-                .Set(x => x.LastUpdated, DateTime.UtcNow)
-                .Set(x => x.Datos, evento.Cambio);
+            var registroExistente = await collection.Find(filter).FirstOrDefaultAsync();
             
-            await collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+            MongoDB.Bson.BsonDocument datosSeccion;
+            
+            if (registroExistente != null)
+            {
+                datosSeccion = registroExistente.Datos ?? new MongoDB.Bson.BsonDocument();
+            }
+            else
+            {
+                datosSeccion = new MongoDB.Bson.BsonDocument();
+            }
+            
+            if (evento.Cambio.TryGetProperty("Datos", out var nuevosDatos))
+            {
+                var nuevosDatosBson = MongoDB.Bson.BsonDocument.Parse(nuevosDatos.GetRawText());
+                datosSeccion[seccionKey] = nuevosDatosBson;
+            }
+            
+            var clienteData = new ClienteData
+            {
+                ClienteId = evento.ClienteId,
+                InstitucionId = institucionId,
+                Datos = datosSeccion,
+                LastUpdated = DateTime.UtcNow,
+                Version = (registroExistente?.Version ?? 0) + 1
+            };
+            
+            await collection.ReplaceOneAsync(filter, clienteData, new ReplaceOptions { IsUpsert = true });
         }
 
         public override void Dispose()

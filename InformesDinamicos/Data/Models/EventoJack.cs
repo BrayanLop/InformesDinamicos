@@ -1,27 +1,31 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InformesDinamicos.Data.Models
 {
     public class EventoJack
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
+        [JsonPropertyName("Id")]
         public string Id { get; set; }
 
-        [BsonElement("clienteId")]
+        [JsonPropertyName("ClienteId")]
         public string ClienteId { get; set; }
 
-        [BsonElement("seccion")]
+
+
+        [JsonPropertyName("Seccion")]
         public string Seccion { get; set; }
 
-        [BsonElement("registroId")]
+        [JsonPropertyName("RegistroId")]
         public string RegistroId { get; set; }
 
-        [BsonElement("cambio")]
-        public object Cambio { get; set; }
+        [JsonPropertyName("Cambio")]
+        public JsonElement Cambio { get; set; }
 
-        [BsonElement("timestamp")]
+        [JsonPropertyName("Timestamp")]
         public DateTime Timestamp { get; set; }
+
+        [JsonPropertyName("Version")]
+        public int Version { get; set; } = 1;
     }
 }

@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Estadísticas de Base de Datos";
+}
+
+<div class="container-fluid">
+    <div class="text-center mb-4">
+        <h1 class="display-4">📊 Estadísticas del Sistema</h1>
+        <p class="lead">Monitoreo de bases de datos y colecciones</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📚 Base de Datos Académico</h5>
+                </div>
+                <div class="card-body">
+                    <div id="academico-stats">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>👥 Base de Datos Comunidad</h5>
+                </div>
+                <div class="card-body">
+                    <div id="comunidad-stats">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🗄️ Todas las Bases de Datos</h5>
+                </div>
+                <div class="card-body">
+                    <div id="all-databases">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar estadísticas de Académico
+    fetch('/api/database/Academico/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('academico-stats').innerHTML = formatStats(data);
+        })
+        .catch(error => {
+            document.getElementById('academico-stats').innerHTML = '<div class="alert alert-danger">Error cargando datos</div>';
+        });
+
+    // Cargar estadísticas de Comunidad
+    fetch('/api/database/Comunidad/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('comunidad-stats').innerHTML = formatStats(data);
+        })
+        .catch(error => {
+            document.getElementById('comunidad-stats').innerHTML = '<div class="alert alert-danger">Error cargando datos</div>';
+        });
+
+    // Cargar todas las bases de datos
+    fetch('/api/database/databases')
+        .then(response => response.json())
+        .then(data => {
+            let html = '<ul class="list-group">';
+            data.forEach(db => {
+                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${db}
+                    <span class="badge bg-primary rounded-pill">BD</span>
+                </li>`;
+            });
+            html += '</ul>';
+            document.getElementById('all-databases').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('all-databases').innerHTML = '<div class="alert alert-danger">Error cargando datos</div>';
+        });
+});
+
+function formatStats(data) {
+    if (!data.collections || data.collections.length === 0) {
+        return '<div class="alert alert-info">No hay colecciones</div>';
+    }
+    
+    let html = '<div class="row">';
+    data.collections.forEach(collection => {
+        html += `
+            <div class="col-12 mb-2">
+                <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                    <span><strong>${collection.collection}</strong></span>
+                    <span class="badge bg-success">${collection.documentCount} docs</span>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    return html;
+}
+</script>

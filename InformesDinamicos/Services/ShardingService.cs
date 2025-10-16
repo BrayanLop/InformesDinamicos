@@ -6,29 +6,39 @@ namespace InformesDinamicos.Services
 {
     public class ShardingService
     {
-        private readonly MongoDbContext _mongoContext;
+        private readonly IMongoClient _mongoClient;
+        private readonly string _connectionString;
 
-        public ShardingService(MongoDbContext mongoContext)
+        public ShardingService(IMongoClient mongoClient, IConfiguration configuration)
         {
-            _mongoContext = mongoContext;
+            _mongoClient = mongoClient;
+            _connectionString = configuration.GetConnectionString("MongoDB");
         }
 
-        public string DeterminarShard(string clienteId, string seccion)
+        public string DeterminarShard(string clienteId)
         {
-            var clienteIdNum = int.Parse(clienteId.Substring(clienteId.Length - 2));
-            var rango = clienteIdNum <= 10 ? "0_10" : "11_20";
-            return $"{seccion}_{rango}";
+            // Si es un número, usar la lógica original
+            if (int.TryParse(clienteId, out var clienteIdNum))
+            {
+                return clienteIdNum <= 10 ? "1_10" : "11_20";
+            }
+            
+            // Si es un GUID u otro string, usar hash para determinar shard
+            var hash = clienteId.GetHashCode();
+            var positiveHash = Math.Abs(hash);
+            return (positiveHash % 2 == 0) ? "1_10" : "11_20";
         }
 
         public IMongoCollection<ClienteData> GetClienteCollection(string clienteId, string seccion)
         {
-            var shardName = DeterminarShard(clienteId, seccion);
-            return _mongoContext.GetCollection<ClienteData>(shardName);
+            var database = _mongoClient.GetDatabase(seccion);
+            var shardName = $"{seccion}_{DeterminarShard(clienteId)}";
+            return database.GetCollection<ClienteData>(shardName);
         }
 
-        public IMongoCollection<ClienteData> GetShardCollection(string shardName)
+        public IMongoDatabase GetSeccionDatabase(string seccion)
         {
-            return _mongoContext.GetCollection<ClienteData>(shardName);
+            return _mongoClient.GetDatabase(seccion);
         }
     }
 }

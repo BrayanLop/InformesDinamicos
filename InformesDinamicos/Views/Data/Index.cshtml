@@ -1,0 +1,129 @@
+@{
+    ViewData["Title"] = "Datos y Shards";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>🗄️ Datos y Shards</h2>
+            <p>Visualiza los datos por base de datos y shard</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" onclick="loadShard('Academico', 'Academico_1_10')">📚 Académico 1-10</button>
+                <button type="button" class="btn btn-outline-primary" onclick="loadShard('Academico', 'Academico_11_20')">📚 Académico 11-20</button>
+                <button type="button" class="btn btn-outline-info" onclick="loadShard('Comunidad', 'Comunidad_1_10')">👥 Comunidad 1-10</button>
+                <button type="button" class="btn btn-outline-info" onclick="loadShard('Comunidad', 'Comunidad_11_20')">👥 Comunidad 11-20</button>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-success" onclick="processEvent()">⚡ Procesar Evento RabbitMQ</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 id="shard-title">Selecciona un shard para ver los datos</h5>
+                    <span id="record-count" class="badge bg-secondary">0 registros</span>
+                </div>
+                <div class="card-body">
+                    <div id="loading" class="text-center d-none">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <div id="data-table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadShard(database, shard) {
+    document.getElementById('loading').classList.remove('d-none');
+    document.getElementById('data-table').innerHTML = '';
+    document.getElementById('shard-title').textContent = `Datos de ${shard}`;
+    
+    fetch(`/Data/GetShardData?database=${database}&shard=${shard}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading').classList.add('d-none');
+            if (data.error) {
+                document.getElementById('data-table').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                return;
+            }
+            renderTable(data);
+            document.getElementById('record-count').textContent = `${data.length} registros`;
+        })
+        .catch(error => {
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('data-table').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        });
+}
+
+function renderTable(data) {
+    if (!data || data.length === 0) {
+        document.getElementById('data-table').innerHTML = '<div class="alert alert-info">No hay datos disponibles</div>';
+        return;
+    }
+
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Cliente ID</th>
+                        <th>Datos</th>
+                        <th>Última Actualización</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    data.forEach(item => {
+        const datos = item.datos !== 'N/A' ? 
+            (typeof item.datos === 'string' ? item.datos : JSON.stringify(item.datos, null, 2)) : 
+            'N/A';
+        
+        const badgeClass = item.accion === 'CREATE' ? 'bg-success' : 
+                          item.accion === 'UPDATE' ? 'bg-warning' : 
+                          item.accion === 'DELETE' ? 'bg-danger' : 'bg-secondary';
+        
+        html += `
+            <tr>
+                <td><code>${item.clienteId}</code></td>
+                <td><pre class="small bg-light p-2 rounded" style="white-space: pre-wrap; word-break: break-word; max-width: 400px; font-family: 'Courier New', monospace;">${JSON.stringify(JSON.parse(datos), null, 2)}</pre></td>
+                <td><small>${new Date(item.lastUpdated).toLocaleString()}</small></td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('data-table').innerHTML = html;
+}
+
+function processEvent() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Procesando...';
+    
+    fetch('/Data/ProcessEvent', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
+        })
+        .catch(error => {
+            alert('❌ Error: ' + error.message);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '⚡ Procesar Evento RabbitMQ';
+        });
+}
+</script>

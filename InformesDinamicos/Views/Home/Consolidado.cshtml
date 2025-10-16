@@ -1,0 +1,93 @@
+@model List<InformesDinamicos.Data.Models.ClienteData>
+@using MongoDB.Bson.IO
+@{
+    ViewData["Title"] = "Vista Consolidada Multitenant";
+}
+
+<div class="container-fluid">
+    <div class="text-center mb-4">
+        <h1 class="display-4">🏢 Vista Consolidada Multitenant</h1>
+        <p class="lead">Datos de todas las secciones para el cliente: <code>@ViewBag.ClienteId</code></p>
+        @if (ViewBag.TotalRegistros != null)
+        {
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Encontrados <strong>@ViewBag.TotalRegistros registros</strong>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @ViewBag.Error
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-database"></i>
+                                Registro de BD
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Cliente ID: <code>@item.ClienteId</code></h6>
+                                <h6>Institución: <code>@item.InstitucionId</code></h6>
+                                <p><strong>Última actualización:</strong> @item.LastUpdated.ToString("yyyy-MM-dd HH:mm")</p>
+                                <p><strong>Versión:</strong> <span class="badge bg-primary">v@item.Version</span></p>
+                                
+                                @if (item.Datos != null)
+                                {
+                                    <div class="bg-light p-2 rounded">
+                                        <strong>Datos:</strong>
+                                        <pre class="small mt-2">@GetSafeBsonText(item.Datos)</pre>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="bg-light p-2 rounded">
+                                        <strong>Datos:</strong>
+                                        <span class="text-muted">No hay datos disponibles</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No se encontraron datos</h5>
+            <p class="text-muted">Intenta crear datos de prueba primero</p>
+            <a href="/Test/CrearDatos" class="btn btn-primary">Crear Datos de Prueba</a>
+        </div>
+    }
+</div>
+
+@functions {
+    public string GetSafeBsonText(MongoDB.Bson.BsonDocument bsonDoc)
+    {
+        try
+        {
+            if (bsonDoc == null)
+                return "N/A";
+
+            return bsonDoc.ToString();
+        }
+        catch
+        {
+            return "Error al leer datos";
+        }
+    }
+}

@@ -1,5 +1,6 @@
 using InformesDinamicos.Data;
 using InformesDinamicos.Services;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // MongoDB
-builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("MongoDB");
+    return new MongoClient(connectionString);
+});
 builder.Services.AddSingleton<ShardingService>();
 builder.Services.AddScoped<RabbitConsumerService>();
+builder.Services.AddScoped<ConsolidacionService>();
 
 // RabbitMQ Service
 builder.Services.AddHostedService<RabbitListener>();
