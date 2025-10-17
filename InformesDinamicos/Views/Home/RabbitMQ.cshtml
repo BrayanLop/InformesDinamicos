@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "RabbitMQ Manager";
+}
+
+<div class="container-fluid">
+    <h2>Gestión de RabbitMQ - Cola "informe"</h2>
+    
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Estado de la Cola</h5>
+                </div>
+                <div class="card-body">
+                    <div id="estadoCola" class="alert alert-info">
+                        Cargando estado...
+                    </div>
+                    <button class="btn btn-primary" onclick="actualizarEstado()">Actualizar Estado</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-success mb-2" onclick="verMensaje()">Ver Mensaje (Sin Consumir)</button>
+                    <button class="btn btn-warning mb-2" onclick="consumirMensaje()">Consumir Mensaje</button>
+                    <button class="btn btn-danger mb-2" onclick="purgarCola()">Purgar Cola</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resultado</h5>
+                </div>
+                <div class="card-body">
+                    <div id="resultado" class="alert alert-secondary">
+                        Selecciona una acción...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Contenido del Mensaje</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="contenidoMensaje" class="bg-light p-3" style="max-height: 400px; overflow-y: auto;">
+No hay mensaje para mostrar
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function actualizarEstado() {
+        fetch('/api/rabbitconsumer/contar-mensajes')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('estadoCola').innerHTML = `
+                        <strong>Error:</strong> ${data.error}
+                    `;
+                    document.getElementById('estadoCola').className = 'alert alert-danger';
+                } else {
+                    document.getElementById('estadoCola').innerHTML = `
+                        <strong>Cola:</strong> ${data.cola}<br>
+                        <strong>Mensajes:</strong> ${data.mensajes}<br>
+                        <strong>Consumidores:</strong> ${data.consumidores}
+                    `;
+                    document.getElementById('estadoCola').className = 'alert alert-info';
+                }
+            })
+            .catch(error => {
+                document.getElementById('estadoCola').innerHTML = `<strong>Error de conexión:</strong> ${error}`;
+                document.getElementById('estadoCola').className = 'alert alert-danger';
+            });
+    }
+
+    function verMensaje() {
+        fetch('/api/rabbitconsumer/ver-mensaje')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    mostrarResultado(`Error: ${data.error}`, 'danger');
+                } else if (!data.hayMensajes) {
+                    mostrarResultado(data.mensaje, 'warning');
+                    document.getElementById('contenidoMensaje').textContent = 'No hay mensajes en la cola';
+                } else {
+                    mostrarResultado(`${data.mensaje} (${data.longitud} caracteres)`, 'success');
+                    document.getElementById('contenidoMensaje').textContent = data.contenido;
+                }
+                actualizarEstado();
+            })
+            .catch(error => mostrarResultado(`Error: ${error}`, 'danger'));
+    }
+
+    function consumirMensaje() {
+        fetch('/api/rabbitconsumer/consumir-mensaje', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    mostrarResultado(`Error: ${data.error}`, 'danger');
+                } else if (!data.hayMensajes) {
+                    mostrarResultado(data.mensaje, 'warning');
+                    document.getElementById('contenidoMensaje').textContent = 'No hay mensajes en la cola';
+                } else {
+                    mostrarResultado(data.mensaje, 'success');
+                    document.getElementById('contenidoMensaje').textContent = data.evento;
+                }
+                actualizarEstado();
+            })
+            .catch(error => mostrarResultado(`Error: ${error}`, 'danger'));
+    }
+
+    function purgarCola() {
+        if (confirm('¿Estás seguro de que quieres eliminar TODOS los mensajes de la cola?')) {
+            fetch('/api/rabbitconsumer/purgar-cola', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        mostrarResultado(`Error: ${data.error}`, 'danger');
+                    } else {
+                        mostrarResultado(data.mensaje, 'warning');
+                        document.getElementById('contenidoMensaje').textContent = 'Cola purgada';
+                    }
+                    actualizarEstado();
+                })
+                .catch(error => mostrarResultado(`Error: ${error}`, 'danger'));
+        }
+    }
+
+    function mostrarResultado(mensaje, tipo) {
+        document.getElementById('resultado').innerHTML = mensaje;
+        document.getElementById('resultado').className = `alert alert-${tipo}`;
+    }
+
+    // Cargar estado inicial
+    actualizarEstado();
+    
+    // Auto-actualizar cada 5 segundos
+    setInterval(actualizarEstado, 5000);
+</script>

@@ -27,5 +27,15 @@ namespace InformesDinamicos.Data.Models
 
         [JsonPropertyName("Version")]
         public int Version { get; set; } = 1;
+        
+        // Nuevos campos para CRUD normalizado
+        [JsonPropertyName("Tipo")]
+        public string Tipo { get; set; } = string.Empty; // "crear", "actualizar", "eliminar"
+        
+        [JsonPropertyName("Entidad")]
+        public string Entidad { get; set; } = string.Empty; // "institucion", "programa", "asignatura", "persona"
+        
+        [JsonPropertyName("Datos")]
+        public JsonElement Datos { get; set; } // Datos de la entidad
     }
 }

@@ -19,8 +19,9 @@ builder.Services.AddScoped<RabbitConsumerService>();
 builder.Services.AddScoped<ConsolidacionService>();
 builder.Services.AddScoped<DatabaseService>();
 
-// RabbitMQ Service
-builder.Services.AddHostedService<RabbitListener>();
+// RabbitMQ Service - Solo para consumo manual
+builder.Services.AddSingleton<RabbitListener>();
+// builder.Services.AddHostedService<RabbitListener>(provider => provider.GetService<RabbitListener>());
 
 var app = builder.Build();
 

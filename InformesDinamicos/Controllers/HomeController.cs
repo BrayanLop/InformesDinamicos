@@ -266,5 +266,10 @@ namespace InformesDinamicos.Controllers
         {
             return View();
         }
+
+        public IActionResult RabbitMQ()
+        {
+            return View();
+        }
     }
 }

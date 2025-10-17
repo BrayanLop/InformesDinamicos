@@ -40,5 +40,10 @@ namespace InformesDinamicos.Services
         {
             return _mongoClient.GetDatabase(seccion);
         }
+        
+        public IMongoDatabase GetDatabase(string databaseName)
+        {
+            return _mongoClient.GetDatabase(databaseName);
+        }
     }
 }

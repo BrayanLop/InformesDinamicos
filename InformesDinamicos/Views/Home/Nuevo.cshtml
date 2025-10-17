@@ -29,6 +29,15 @@
             <button class="btn btn-success me-2" onclick="crearDatos()">
                 <i class="fas fa-plus"></i> Crear Datos de Prueba
             </button>
+            <button class="btn btn-primary me-2" onclick="consumirMensaje()">
+                <i class="fas fa-download"></i> Consumir Mensaje Bus
+            </button>
+            <button class="btn btn-info me-2" onclick="contarMensajes()">
+                <i class="fas fa-list-ol"></i> Ver Cola (<span id="mensaje-count">0</span>)
+            </button>
+            <button class="btn btn-warning me-2" onclick="verMensaje()">
+                <i class="fas fa-eye"></i> Ver Mensaje
+            </button>
             <button class="btn btn-danger" onclick="limpiarDatos()">
                 <i class="fas fa-trash"></i> Limpiar Datos
             </button>
@@ -314,6 +323,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     cargar('instituciones');
     configurarFormularios();
+    contarMensajes(); // Cargar contador inicial
     
     // Event listeners para filtros BD
     document.querySelectorAll('.bd-filter').forEach(btn => {
@@ -323,6 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarBD(btn.dataset.bd);
         });
     });
+    
+    // Actualizar contador cada 30 segundos
+    setInterval(contarMensajes, 30000);
 });
 
 // Configurar formularios
@@ -407,6 +420,84 @@ async function limpiarDatos() {
         if (res.ok) {
             mostrarMensaje(`✅ ${data.mensaje}`, 'success');
             cargar('instituciones');
+        } else {
+            mostrarMensaje(`❌ ${data.error}`, 'danger');
+        }
+    } catch (e) {
+        mostrarMensaje(`❌ ${e.message}`, 'danger');
+    }
+}
+
+async function consumirMensaje() {
+    try {
+        mostrarMensaje('📥 Consumiendo mensaje del bus...', 'info');
+        
+        const res = await fetch('/api/rabbitconsumer/consumir-mensaje', { method: 'POST' });
+        const data = await res.json();
+        
+        if (res.ok) {
+            if (data.hayMensajes) {
+                mostrarMensaje(`✅ Mensaje procesado: ${data.evento.substring(0, 100)}...`, 'success');
+                // Recargar datos y actualizar contador
+                setTimeout(() => {
+                    cargar('instituciones');
+                    contarMensajes();
+                }, 500);
+            } else {
+                mostrarMensaje('ℹ️ No hay mensajes en la cola', 'warning');
+            }
+        } else {
+            mostrarMensaje(`❌ ${data.error}`, 'danger');
+        }
+    } catch (e) {
+        mostrarMensaje(`❌ ${e.message}`, 'danger');
+    }
+}
+
+async function contarMensajes() {
+    try {
+        const res = await fetch('/api/rabbitconsumer/contar-mensajes');
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById('mensaje-count').textContent = data.mensajes;
+        }
+    } catch (e) {
+        console.error('Error contando mensajes:', e);
+    }
+}
+
+async function verMensaje() {
+    try {
+        const res = await fetch('/api/rabbitconsumer/ver-mensaje');
+        const data = await res.json();
+        
+        if (res.ok) {
+            if (data.hayMensajes !== false) {
+                const contenido = data.contenido.length > 300 ? data.contenido.substring(0, 300) + '...' : data.contenido;
+                mostrarMensaje(`👁️ Mensaje: ${contenido}`, 'info');
+                console.log('Mensaje completo:', data.contenido);
+            } else {
+                mostrarMensaje('ℹ️ No hay mensajes en la cola', 'warning');
+            }
+        } else {
+            mostrarMensaje(`❌ ${data.error}`, 'danger');
+        }
+    } catch (e) {
+        mostrarMensaje(`❌ ${e.message}`, 'danger');
+    }
+}
+
+async function purgarCola() {
+    if (!confirm('¿Eliminar TODOS los mensajes de la cola?')) return;
+    
+    try {
+        const res = await fetch('/api/rabbitconsumer/purgar-cola', { method: 'POST' });
+        const data = await res.json();
+        
+        if (res.ok) {
+            mostrarMensaje(`✅ ${data.mensaje}`, 'success');
+            contarMensajes();
         } else {
             mostrarMensaje(`❌ ${data.error}`, 'danger');
         }

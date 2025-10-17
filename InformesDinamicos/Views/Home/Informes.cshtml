@@ -1,53 +1,161 @@
 @{
     ViewData["Title"] = "Informes Dinámicos";
+    Layout = null;
 }
 
-<div class="container-fluid">
-    <div class="text-center mb-4">
-        <h1 class="display-4">📊 Informes Dinámicos</h1>
-        <p class="lead">Consolidación de datos de todas las bases</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="vh-100 d-flex flex-column">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary flex-shrink-0">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>Informes Dinámicos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Home/Nuevo">
+                            <i class="fas fa-database me-1"></i>CRUDs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Home/RabbitMQ">
+                            <i class="fas fa-message me-1"></i>RabbitMQ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/Home/Informes">
+                            <i class="fas fa-chart-bar me-1"></i>Informes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Panel de control compacto -->
+    <div class="bg-light border-bottom flex-shrink-0">
+        <div class="container-fluid py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-xl-2 col-lg-3 col-md-4">
+                    <label class="form-label small mb-1">Fuente</label>
+                    <select id="fuente-datos" class="form-select form-select-sm" onchange="cargarCampos()">
+                        <option value="">Seleccionar...</option>
+                        <option value="instituciones">Instituciones</option>
+                        <option value="programas">Programas</option>
+                        <option value="asignaturas">Asignaturas</option>
+                        <option value="personas">Personas</option>
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-3 col-md-4">
+                    <label class="form-label small mb-1">Institución</label>
+                    <select id="filtro-institucion" class="form-select form-select-sm">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="col-xl-8 col-lg-6 col-md-4">
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-primary btn-sm" onclick="generarInforme()">
+                            <i class="fas fa-play"></i> Generar
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="exportarDatos()">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarTodo()">
+                            <i class="fas fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Controles de Filtro -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <label class="form-label">Institución</label>
-            <select id="filtro-institucion" class="form-select">
-                <option value="">Todas las instituciones</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Tipo de Reporte</label>
-            <select id="tipo-reporte" class="form-select">
-                <option value="resumen">Resumen General</option>
-                <option value="programas">Programas por Institución</option>
-                <option value="personas">Personas por Rol</option>
-                <option value="asignaturas">Asignaturas por Programa</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Acciones</label>
-            <div>
-                <button class="btn btn-primary" onclick="generarInforme()">
-                    <i class="fas fa-chart-line"></i> Generar
-                </button>
-                <button class="btn btn-success" onclick="exportarDatos()">
-                    <i class="fas fa-download"></i> Exportar
-                </button>
+    <!-- Panel de campos y filtros -->
+    <div class="flex-shrink-0" id="campos-section" style="display: none;">
+        <div class="container-fluid py-2 bg-white border-bottom">
+            <div class="row g-2">
+                <div class="col-lg-4 col-md-6">
+                    <div class="border rounded p-2">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-list text-info me-2"></i>
+                            <strong class="small">Disponibles</strong>
+                        </div>
+                        <div id="campos-disponibles" class="campos-box">
+                            <!-- Campos dinámicos -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="border rounded p-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong class="small">Seleccionados</strong>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="limpiarSeleccion()">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div id="campos-seleccionados" class="campos-box">
+                            <small class="text-muted">Arrastra campos aquí</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="border rounded p-2" id="filtros-section" style="display: none;">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-filter text-warning me-2"></i>
+                            <strong class="small">Filtros</strong>
+                        </div>
+                        <div id="filtros-dinamicos">
+                            <!-- Filtros dinámicos -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Área de Resultados -->
-    <div class="card">
-        <div class="card-header">
-            <h5><i class="fas fa-table"></i> Resultados del Informe</h5>
-        </div>
-        <div class="card-body">
-            <div id="informe-content">
-                <div class="text-center text-muted">
-                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
-                    <p>Selecciona los filtros y haz clic en "Generar" para ver el informe</p>
+    <div class="flex-grow-1 d-flex flex-column">
+        <div class="container-fluid h-100">
+            <div class="card h-100 d-flex flex-column">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-shrink-0">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Resultados del Informe</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-light" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <span id="record-count" class="badge bg-secondary">0 registros</span>
+                    </div>
+                </div>
+                <div class="card-body flex-grow-1 p-0 overflow-auto">
+                    <div id="informe-content" class="h-100 d-flex align-items-center justify-content-center">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-bar fa-4x mb-4 opacity-50"></i>
+                            <h4>Generador de Informes Dinámicos</h4>
+                            <p class="lead">Selecciona una fuente de datos y campos para comenzar</p>
+                            <div class="mt-4">
+                                <span class="badge bg-primary me-2">1. Fuente</span>
+                                <span class="badge bg-info me-2">2. Campos</span>
+                                <span class="badge bg-warning me-2">3. Filtros</span>
+                                <span class="badge bg-success">4. Generar</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -55,6 +163,17 @@
 </div>
 
 <script>
+let camposSeleccionados = [];
+let fuenteActual = '';
+
+const camposPorFuente = {
+    instituciones: ['institucionId', 'nombre', 'codigo'],
+    programas: ['programaId', 'institucionId', 'nombre', 'nivel', 'promedio', 'creditos'],
+    asignaturas: ['asignaturaId', 'programaId', 'institucionId', 'nombre', 'creditos', 'semestre'],
+    personas: ['personaId', 'institucionId', 'nombre', 'rol', 'edad'],
+    consolidado: ['institucion', 'programa', 'asignatura', 'persona', 'rol', 'nivel', 'creditos']
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     cargarInstituciones();
 });
@@ -62,189 +181,459 @@ document.addEventListener('DOMContentLoaded', () => {
 async function cargarInstituciones() {
     try {
         const res = await fetch('/api/instituciones');
-        const instituciones = await res.json();
+        
+        if (!res.ok) {
+            console.error('Error HTTP:', res.status, res.statusText);
+            return;
+        }
+        
+        const text = await res.text();
+        if (!text.trim()) {
+            console.warn('Respuesta vacía del servidor');
+            return;
+        }
+        
+        const instituciones = JSON.parse(text);
         
         const select = document.getElementById('filtro-institucion');
-        instituciones.forEach(inst => {
-            select.innerHTML += `<option value="${inst.institucionId}">${inst.nombre}</option>`;
-        });
+        if (Array.isArray(instituciones) && instituciones.length > 0) {
+            instituciones.forEach(inst => {
+                select.innerHTML += `<option value="${inst.institucionId}">${inst.nombre}</option>`;
+            });
+        } else {
+            console.warn('No hay instituciones disponibles');
+        }
     } catch (e) {
         console.error('Error cargando instituciones:', e);
     }
 }
 
-async function generarInforme() {
-    const institucion = document.getElementById('filtro-institucion').value;
-    const tipo = document.getElementById('tipo-reporte').value;
-    
-    try {
-        let url = `/api/informes/${tipo}`;
-        if (institucion) url += `?institucionId=${institucion}`;
-        
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        mostrarInforme(tipo, data);
-    } catch (e) {
-        document.getElementById('informe-content').innerHTML = 
-            `<div class="alert alert-danger">Error: ${e.message}</div>`;
+function cargarCampos() {
+    const fuente = document.getElementById('fuente-datos').value;
+    if (!fuente) {
+        document.getElementById('campos-section').style.display = 'none';
+        document.getElementById('filtros-section').style.display = 'none';
+        return;
     }
+    
+    fuenteActual = fuente;
+    document.getElementById('campos-section').style.display = 'block';
+    document.getElementById('filtros-section').style.display = 'block';
+    
+    const campos = camposPorFuente[fuente] || [];
+    const container = document.getElementById('campos-disponibles');
+    
+    container.innerHTML = campos.map(campo => `
+        <div class="campo-item" draggable="true" ondragstart="drag(event)" onclick="seleccionarCampo('${campo}')">
+            <i class="fas fa-grip-vertical me-2"></i>${campo}
+        </div>
+    `).join('');
+    
+    cargarFiltrosDinamicos(fuente);
 }
 
-function mostrarInforme(tipo, data) {
-    const content = document.getElementById('informe-content');
+function cargarFiltrosDinamicos(fuente) {
+    const container = document.getElementById('filtros-dinamicos');
+    let filtros = '';
     
-    switch(tipo) {
-        case 'resumen':
-            content.innerHTML = generarResumen(data);
-            break;
+    switch(fuente) {
         case 'programas':
-            content.innerHTML = generarTablaProgramas(data);
+            filtros = `
+                <div class="mb-2">
+                    <label class="form-label small">Nivel Mínimo</label>
+                    <input type="number" id="nivel-min" class="form-control form-control-sm" min="1" max="10">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Promedio Mínimo</label>
+                    <input type="number" id="promedio-min" class="form-control form-control-sm" step="0.1" min="0" max="5">
+                </div>
+            `;
             break;
         case 'personas':
-            content.innerHTML = generarTablaPersonas(data);
+            filtros = `
+                <div class="mb-2">
+                    <label class="form-label small">Rol</label>
+                    <select id="filtro-rol" class="form-select form-select-sm">
+                        <option value="">Todos los roles</option>
+                        <option value="Estudiante">Estudiante</option>
+                        <option value="Profesor">Profesor</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Coordinador">Coordinador</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Edad Mínima</label>
+                    <input type="number" id="edad-min" class="form-control form-control-sm" min="16" max="80">
+                </div>
+            `;
             break;
         case 'asignaturas':
-            content.innerHTML = generarTablaAsignaturas(data);
+            filtros = `
+                <div class="mb-2">
+                    <label class="form-label small">Semestre</label>
+                    <input type="number" id="semestre-filtro" class="form-control form-control-sm" min="1" max="12">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Créditos Mínimos</label>
+                    <input type="number" id="creditos-min" class="form-control form-control-sm" min="1">
+                </div>
+            `;
+            break;
+    }
+    
+    container.innerHTML = filtros;
+}
+
+function seleccionarCampo(campo) {
+    if (!camposSeleccionados.includes(campo)) {
+        camposSeleccionados.push(campo);
+        actualizarCamposSeleccionados();
+    }
+}
+
+function actualizarCamposSeleccionados() {
+    const container = document.getElementById('campos-seleccionados');
+    
+    if (camposSeleccionados.length === 0) {
+        container.innerHTML = '<p class="text-muted mb-0 small">Arrastra campos aquí</p>';
+        return;
+    }
+    
+    container.innerHTML = camposSeleccionados.map((campo, index) => `
+        <div class="campo-seleccionado">
+            <span><i class="fas fa-arrows-alt me-2"></i>${campo}</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removerCampo(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removerCampo(index) {
+    camposSeleccionados.splice(index, 1);
+    actualizarCamposSeleccionados();
+}
+
+function limpiarSeleccion() {
+    camposSeleccionados = [];
+    actualizarCamposSeleccionados();
+}
+
+// Drag and drop
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.textContent.trim());
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    const campo = ev.dataTransfer.getData("text");
+    seleccionarCampo(campo);
+}
+
+// Configurar drop zone
+document.getElementById('campos-seleccionados').addEventListener('dragover', allowDrop);
+document.getElementById('campos-seleccionados').addEventListener('drop', drop);
+
+async function generarInforme() {
+    const fuente = document.getElementById('fuente-datos').value;
+    const institucion = document.getElementById('filtro-institucion').value;
+    
+    if (!fuente) {
+        alert('Selecciona una fuente de datos');
+        return;
+    }
+    
+    if (camposSeleccionados.length === 0) {
+        alert('Selecciona al menos un campo');
+        return;
+    }
+    
+    try {
+        let url = `/api/informes/${fuente}`;
+        const params = new URLSearchParams();
+        
+        if (institucion) params.append('institucionId', institucion);
+        params.append('campos', camposSeleccionados.join(','));
+        
+        // Agregar filtros adicionales
+        agregarFiltrosAdicionales(params, fuente);
+        
+        if (params.toString()) url += '?' + params.toString();
+        
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+            throw new Error(`Error HTTP: ${res.status} ${res.statusText}`);
+        }
+        
+        const text = await res.text();
+        if (!text.trim()) {
+            throw new Error('Respuesta vacía del servidor');
+        }
+        
+        const data = JSON.parse(text);
+        mostrarInformeDinamico(data);
+    } catch (e) {
+        console.error('Error completo:', e);
+        document.getElementById('informe-content').innerHTML = 
+            `<div class="alert alert-danger m-3">Error: ${e.message}</div>`;
+    }
+}
+
+function agregarFiltrosAdicionales(params, fuente) {
+    switch(fuente) {
+        case 'programas':
+            const nivelMin = document.getElementById('nivel-min')?.value;
+            const promedioMin = document.getElementById('promedio-min')?.value;
+            if (nivelMin) params.append('nivelMin', nivelMin);
+            if (promedioMin) params.append('promedioMin', promedioMin);
+            break;
+        case 'personas':
+            const rol = document.getElementById('filtro-rol')?.value;
+            const edadMin = document.getElementById('edad-min')?.value;
+            if (rol) params.append('rol', rol);
+            if (edadMin) params.append('edadMin', edadMin);
+            break;
+        case 'asignaturas':
+            const semestre = document.getElementById('semestre-filtro')?.value;
+            const creditosMin = document.getElementById('creditos-min')?.value;
+            if (semestre) params.append('semestre', semestre);
+            if (creditosMin) params.append('creditosMin', creditosMin);
             break;
     }
 }
 
-function generarResumen(data) {
-    return `
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-primary text-white">
-                    <div class="card-body text-center">
-                        <h3>${data.instituciones || 0}</h3>
-                        <p>Instituciones</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body text-center">
-                        <h3>${data.programas || 0}</h3>
-                        <p>Programas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body text-center">
-                        <h3>${data.asignaturas || 0}</h3>
-                        <p>Asignaturas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body text-center">
-                        <h3>${data.personas || 0}</h3>
-                        <p>Personas</p>
-                    </div>
+function mostrarInformeDinamico(data) {
+    const content = document.getElementById('informe-content');
+    
+    if (!data || data.length === 0) {
+        content.innerHTML = '<div class="alert alert-info m-3">No se encontraron datos con los filtros aplicados</div>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-responsive h-100">
+            <table class="table table-striped table-hover mb-0 w-100">
+                <thead class="table-dark sticky-top">
+                    <tr>${camposSeleccionados.map(campo => `<th class="text-nowrap">${campo}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(item => {
+        html += '<tr>';
+        camposSeleccionados.forEach(campo => {
+            let valor = item[campo] || '-';
+            if (campo.includes('Id')) {
+                valor = `<code class="small">${valor}</code>`;
+            } else if (campo === 'rol') {
+                valor = `<span class="badge bg-success">${valor}</span>`;
+            }
+            html += `<td class="text-nowrap">${valor}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table></div>';
+    
+    content.innerHTML = html;
+    actualizarContador(data.length);
+}
+
+
+
+function exportarDatos() {
+    const fuente = document.getElementById('fuente-datos').value;
+    const institucion = document.getElementById('filtro-institucion').value;
+    
+    if (!fuente) {
+        alert('Selecciona una fuente de datos');
+        return;
+    }
+    
+    let url = `/api/informes/${fuente}/export`;
+    const params = new URLSearchParams();
+    
+    if (institucion) params.append('institucionId', institucion);
+    if (camposSeleccionados.length > 0) params.append('campos', camposSeleccionados.join(','));
+    
+    if (params.toString()) url += '?' + params.toString();
+    
+    window.open(url, '_blank');
+}
+
+function limpiarTodo() {
+    document.getElementById('fuente-datos').value = '';
+    document.getElementById('filtro-institucion').value = '';
+    camposSeleccionados = [];
+    fuenteActual = '';
+    
+    document.getElementById('campos-section').style.display = 'none';
+    document.getElementById('filtros-section').style.display = 'none';
+    
+    document.getElementById('informe-content').innerHTML = `
+        <div class="text-center text-muted h-100 d-flex align-items-center justify-content-center">
+            <div>
+                <i class="fas fa-chart-bar fa-4x mb-4 opacity-50"></i>
+                <h4>Generador de Informes Dinámicos</h4>
+                <p class="lead">Selecciona una fuente de datos y campos para comenzar</p>
+                <div class="mt-4">
+                    <span class="badge bg-primary me-2">1. Fuente</span>
+                    <span class="badge bg-info me-2">2. Campos</span>
+                    <span class="badge bg-warning me-2">3. Filtros</span>
+                    <span class="badge bg-success">4. Generar</span>
                 </div>
             </div>
         </div>
     `;
+    
+    document.getElementById('record-count').textContent = '0 registros';
 }
 
-function generarTablaProgramas(data) {
-    let html = `
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Institución</th>
-                        <th>Programa</th>
-                        <th>Nivel</th>
-                        <th>Promedio</th>
-                        <th>Créditos</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    data.forEach(item => {
-        html += `
-            <tr>
-                <td><span class="badge bg-secondary">${item.institucionId}</span></td>
-                <td>${item.nombre}</td>
-                <td>${item.nivel}</td>
-                <td>${item.promedio}</td>
-                <td>${item.creditos}</td>
-            </tr>
-        `;
-    });
-    
-    return html + '</tbody></table></div>';
+function toggleFullscreen() {
+    const content = document.getElementById('informe-content');
+    if (content.requestFullscreen) {
+        content.requestFullscreen();
+    }
 }
 
-function generarTablaPersonas(data) {
-    let html = `
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Institución</th>
-                        <th>Nombre</th>
-                        <th>Rol</th>
-                        <th>Edad</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    data.forEach(item => {
-        html += `
-            <tr>
-                <td><span class="badge bg-secondary">${item.institucionId}</span></td>
-                <td>${item.nombre}</td>
-                <td><span class="badge bg-success">${item.rol}</span></td>
-                <td>${item.edad}</td>
-            </tr>
-        `;
-    });
-    
-    return html + '</tbody></table></div>';
-}
-
-function generarTablaAsignaturas(data) {
-    let html = `
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Programa</th>
-                        <th>Asignatura</th>
-                        <th>Créditos</th>
-                        <th>Semestre</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    data.forEach(item => {
-        html += `
-            <tr>
-                <td><span class="badge bg-primary">${item.programaId}</span></td>
-                <td>${item.nombre}</td>
-                <td>${item.creditos}</td>
-                <td>${item.semestre}</td>
-            </tr>
-        `;
-    });
-    
-    return html + '</tbody></table></div>';
-}
-
-function exportarDatos() {
-    const tipo = document.getElementById('tipo-reporte').value;
-    const institucion = document.getElementById('filtro-institucion').value;
-    
-    let url = `/api/informes/${tipo}/export`;
-    if (institucion) url += `?institucionId=${institucion}`;
-    
-    window.open(url, '_blank');
+function actualizarContador(count) {
+    document.getElementById('record-count').textContent = `${count} registros`;
 }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+<style>
+body {
+    overflow-x: hidden;
+}
+
+.vh-100 {
+    height: 100vh !important;
+}
+
+.campos-box {
+    min-height: 120px;
+    max-height: 150px;
+    border: 1px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+    overflow-y: auto;
+    background: #fafafa;
+}
+
+.campo-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 10px;
+    margin: 3px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.2s ease;
+    user-select: text;
+    font-size: 0.9rem;
+}
+
+.campo-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+}
+
+.campo-seleccionado {
+    background: #28a745;
+    color: white;
+    padding: 6px 10px;
+    margin: 3px 0;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.campo-seleccionado span {
+    user-select: text;
+}
+
+.campo-seleccionado:hover {
+    background: #218838;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.btn {
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-responsive {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.card-body.overflow-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #6c757d #f8f9fa;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 4px;
+}
+
+@@media (max-width: 768px) {
+    .campos-container {
+        min-height: 120px;
+        max-height: 150px;
+    }
+    
+    .campo-item, .campo-seleccionado {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+    
+    .table-responsive {
+        max-height: calc(100vh - 300px);
+    }
+}
+
+@@media (max-width: 576px) {
+    .vh-100 {
+        height: 100vh !important;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+    }
+}
+</style>
